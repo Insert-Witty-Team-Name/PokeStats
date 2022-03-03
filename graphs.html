@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="exploration.css">
+        <title>PokéStats</title>
+    </head>
+    <body>
+        <div>
+            <select id="stat1" class="dropdown"></select><br>
+            <select id="stat2" class="dropdown"></select><br>
+        </div>
+        <form id="types">
+        </form>
+        <div id="graphs"></div>
+    </body>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        var margin = { top: 70, right: 20, bottom: 20, left: 100 };
+        var width = 1280 - margin.left - margin.right;
+        var height = 750 - margin.top - margin.bottom;
+
+        var svg = d3.select("#graphs").append("svg")
+            .style("width", '1280px')
+            .style("height", '750')
+            .style("outline", '3px solid black')
+            .attr("class", "graph")
+            .attr("id", "1")
+            .append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var dict = {};
+        var x_axis = "Attack";
+        var y_axis = "Sp_Attack";
+        var curr_types = [];
+
+        var stat_options1 = ["Attack", "HP", "Defense", "Sp_Attack", "Sp_Defense", "Speed"]
+        var stat_options2 = ["Sp_Attack", "Attack", "HP", "Defense", "Sp_Defense", "Speed"]
+        var type_options = ["Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dark", "Dragon", "Steel", "Fairy"]
+
+        d3.select("#stat1")
+            .selectAll("myOptions")
+                .data(stat_options1)
+            .enter().append('option')
+            .text(d => d)
+            .attr("value", d => d);
+        d3.select("#stat2")
+            .selectAll("myOptions")
+                .data(stat_options2)
+            .enter().append('option')
+            .text(d => d)
+            .attr("value", d => d);
+
+        d3.select("#stat1").on("change", function(d) {
+            x_axis = d3.select(this).property("value");
+            Draw();
+        })
+        d3.select("#stat2").on("change", function(d) {
+            y_axis = d3.select(this).property("value");
+            Draw();
+        })
+
+        type_options.forEach((val) => {
+            document.querySelector("#types").innerHTML +=`
+            <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="Draw()">
+            <label for=${val}>${val}</label><br>`
+        })
+        function Draw() {
+            //var filtered_dict = dict.filter(key => curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false))
+            curr_types = []
+            document.querySelectorAll(".type").forEach((val) => {
+                if (val.checked) {
+                    curr_types.push(val.value)
+                }
+            })
+            var filtered_dict = Object.keys(dict).reduce(function (filtered_dict, key) {
+                if (curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false)) {
+                    filtered_dict[key] = {
+                        "x": dict[key][x_axis],
+                        "y": dict[key][y_axis],
+                        "types": dict[key]["types"],
+                        "legendary": dict[key]["legendary"]
+                    };
+                }
+                return filtered_dict
+            }, {})
+            console.log(filtered_dict)
+            var xScale = d3.scaleLinear()
+                .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].x))
+                .range([0, 1000]);
+            var yScale = d3.scaleLinear()
+                .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].y))
+                .range([600, 0]);
+            
+            var xAxis = d3.axisBottom()
+                .scale(xScale);
+            var yAxis = d3.axisLeft()
+                .scale(yScale);
+            if (svg.selectAll("#xaxis").size() == 0){
+                svg.append("g")
+                    .call(xAxis)
+                    .attr("transform", "translate(0, 600)")
+                    .attr("id", "xaxis");
+                svg.append("g")
+                    .call(yAxis)
+                    .attr("id", "yaxis");
+
+                svg.append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("x", (width - margin.left - margin.right) / 2)
+                    .attr("y", height)
+                    .attr("font-size", 30)
+                    .attr("id", "xtext")
+                    .text(x_axis)  
+                
+                svg.append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("x", -(height - margin.top - margin.bottom) / 2)
+                    .attr("y", -50)
+                    .attr("font-size", 30)
+                    .attr("id", "ytext")
+                    .attr("transform", "rotate(-90)")
+                    .text(y_axis)
+            } else {
+                svg.select("#xaxis")
+                    .transition()
+                        .duration(300)
+                        .call(xAxis);
+                svg.select("#yaxis")
+                    .transition()
+                        .duration(300)
+                        .call(yAxis);
+                svg.select("#xtext")
+                    .text(x_axis)
+                svg.select("#ytext")
+                    .text(y_axis)
+            }
+            
+
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", (width - margin.left - margin.right) / 2)
+                .attr("y", -10)
+                .attr("font-size", 40)
+                .text("Attack vs Sp Attack")
+
+            function getColor(type) {
+                switch (type) {
+                    case "Normal": 
+                        return "#A8A77A";
+                    case "Fire": 
+                        return "#EE8130";
+                    case "Water": 
+                        return "#6390F0";
+                    case "Electric": 
+                        return "#F7D02C";
+                    case "Grass": 
+                        return "#7AC74C";
+                    case "Ice": 
+                        return "#96D9D6";
+                    case "Fighting": 
+                        return "#C22E28";
+                    case "Poison": 
+                        return "#A33EA1";
+                    case "Ground": 
+                        return "#E2BF65";
+                    case "Flying": 
+                        return "#A98FF3";
+                    case "Psychic": 
+                        return "#F95587";
+                    case "Bug": 
+                        return "#A6B91A";
+                    case "Rock": 
+                        return "#B6A136";
+                    case "Ghost": 
+                        return "#735797";
+                    case "Dragon": 
+                        return "#6F35FC";
+                    case "Dark": 
+                        return "#705746";
+                    case "Steel": 
+                        return "#B7B7CE";
+                    case "Fairy": 
+                        return "#D685AD";
+                    default:
+                        console.log("something wrong with types")
+                }
+            }
+
+            var selection = svg.selectAll("circle")
+                .data(Object.keys(filtered_dict))
+                    
+            selection.enter().append("circle")
+                .attr("cx", key => xScale(filtered_dict[key].x))
+                .attr("cy", key => yScale(filtered_dict[key].y))
+                .attr("r", 5)
+                .attr("fill", key => getColor(filtered_dict[key].types[0]))
+                .on('mouseover', key => console.log(key))
+                
+            selection.exit().remove()
+                
+            
+                    
+                    // .on('mouseover', function(d, i) {
+
+                    //     svg.append("text")
+                    //         .attr("x", d.target.cx.baseVal.value)
+                    //         .attr("y", d.target.cy.baseVal.value - 10)
+                    //         .attr("text-anchor", "middle")
+                    //         .attr("text-size", 10)
+                    //         .style("background", "black")
+                    //         .text(i);
+
+                    // })
+                    // .on('mouseout', function() {
+                    //     svg.select("#name").remove();
+                    // })
+        }
+
+        d3.csv("/pokedex.csv", function(d) {
+            dict[d.name] = {
+                "HP": parseInt(d.hp),
+                "Attack": parseInt(d.attack),
+                "Defense": parseInt(d.defense),
+                "Sp_Attack": parseInt(d.sp_attack),
+                "Sp_Defense": parseInt(d.sp_defense),
+                "Speed": parseInt(d.speed),
+                "types": d.type_number == 2 ? [d.type_1, d.type_2] : [d.type_1],
+                "legendary": d.status
+            };
+        })
+    </script>
+</html>
