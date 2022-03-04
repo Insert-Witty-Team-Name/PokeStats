@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <link rel="stylesheet" href="exploration.css">
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="styles/styles.css">
         <title>PokéStats</title>
     </head>
     <body>
@@ -89,7 +92,7 @@
             var yScale = d3.scaleLinear()
                 .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].y))
                 .range([600, 0]);
-            
+
             var xAxis = d3.axisBottom()
                 .scale(xScale);
             var yAxis = d3.axisLeft()
@@ -109,8 +112,8 @@
                     .attr("y", height)
                     .attr("font-size", 30)
                     .attr("id", "xtext")
-                    .text(x_axis)  
-                
+                    .text(x_axis)
+
                 svg.append("text")
                     .attr("text-anchor", "middle")
                     .attr("x", -(height - margin.top - margin.bottom) / 2)
@@ -133,7 +136,7 @@
                 svg.select("#ytext")
                     .text(y_axis)
             }
-            
+
 
             svg.append("text")
                 .attr("text-anchor", "middle")
@@ -144,41 +147,41 @@
 
             function getColor(type) {
                 switch (type) {
-                    case "Normal": 
+                    case "Normal":
                         return "#A8A77A";
-                    case "Fire": 
+                    case "Fire":
                         return "#EE8130";
-                    case "Water": 
+                    case "Water":
                         return "#6390F0";
-                    case "Electric": 
+                    case "Electric":
                         return "#F7D02C";
-                    case "Grass": 
+                    case "Grass":
                         return "#7AC74C";
-                    case "Ice": 
+                    case "Ice":
                         return "#96D9D6";
-                    case "Fighting": 
+                    case "Fighting":
                         return "#C22E28";
-                    case "Poison": 
+                    case "Poison":
                         return "#A33EA1";
-                    case "Ground": 
+                    case "Ground":
                         return "#E2BF65";
-                    case "Flying": 
+                    case "Flying":
                         return "#A98FF3";
-                    case "Psychic": 
+                    case "Psychic":
                         return "#F95587";
-                    case "Bug": 
+                    case "Bug":
                         return "#A6B91A";
-                    case "Rock": 
+                    case "Rock":
                         return "#B6A136";
-                    case "Ghost": 
+                    case "Ghost":
                         return "#735797";
-                    case "Dragon": 
+                    case "Dragon":
                         return "#6F35FC";
-                    case "Dark": 
+                    case "Dark":
                         return "#705746";
-                    case "Steel": 
+                    case "Steel":
                         return "#B7B7CE";
-                    case "Fairy": 
+                    case "Fairy":
                         return "#D685AD";
                     default:
                         console.log("something wrong with types")
@@ -187,7 +190,7 @@
 
             var selection = svg.selectAll("circle")
                 .data(Object.keys(filtered_dict))
-                                
+
             selection.enter().append("circle")
                 .attr("cx", key => xScale(filtered_dict[key].x))
                 .attr("cy", key => yScale(filtered_dict[key].y))
@@ -203,11 +206,11 @@
                 .attr("r", 5)
                 .attr("fill", key => getColor(filtered_dict[key].types[0]))
                 .on('mouseover', key => console.log(key))
-                
+
             selection.exit().remove()
-                
-            
-                    
+
+
+
                     // .on('mouseover', function(d, i) {
 
                     //     svg.append("text")
