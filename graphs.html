@@ -187,8 +187,17 @@
 
             var selection = svg.selectAll("circle")
                 .data(Object.keys(filtered_dict))
-                    
+                                
             selection.enter().append("circle")
+                .attr("cx", key => xScale(filtered_dict[key].x))
+                .attr("cy", key => yScale(filtered_dict[key].y))
+                .attr("r", 5)
+                .attr("fill", key => getColor(filtered_dict[key].types[0]))
+                .on('mouseover', key => console.log(key))
+
+            // Jacob: from my understanding, selection.transition() is equivalent to selection.join(update)
+            selection.transition()
+                .duration(500)
                 .attr("cx", key => xScale(filtered_dict[key].x))
                 .attr("cy", key => yScale(filtered_dict[key].y))
                 .attr("r", 5)
