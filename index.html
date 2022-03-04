@@ -66,6 +66,8 @@
             <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="Draw()">
             <label for=${val}>${val}</label><br>`
         })
+
+
         function Draw() {
             //var filtered_dict = dict.filter(key => curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false))
             curr_types = []
@@ -87,10 +89,10 @@
             }, {})
             console.log(filtered_dict)
             var xScale = d3.scaleLinear()
-                .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].x))
+                .domain([0, 200])
                 .range([0, 1000]);
             var yScale = d3.scaleLinear()
-                .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].y))
+                .domain([0, 200])
                 .range([600, 0]);
 
             var xAxis = d3.axisBottom()
