@@ -57,8 +57,7 @@
                 
             })
             
-            Draw();
-            drawLines();
+            update();
         }
 
 
@@ -116,7 +115,7 @@
 
         type_options.forEach((val) => {
             document.querySelector("#types").innerHTML +=`
-            <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" >
+            <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="Draw()" >
             <label for=${val}>${val}</label><br>`
         })
 
@@ -147,7 +146,11 @@
                 }
                 return filtered_dict
             }, {})
-            console.log(filtered_dict)
+            // console.log(filtered_dict)
+
+            // Transition
+            let t = d3.transition().duration(500)
+
             var xScale = d3.scaleLinear()
                 .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].x))
                 .range([0, 1000]);
@@ -238,8 +241,8 @@
                     }
                 })
                 .on('mouseover', function(d, i) {
-                    console.log(d.pageX)
-                    console.log(d.pageY)
+                    // console.log(d.pageX)
+                    // console.log(d.pageY)
                     scatter_svg.append("text")
                         .attr("x", d.pageX - 200)
                         .attr("y", d.pageY - 180)
@@ -423,10 +426,10 @@
             //             .each(function(d) { d3.select(this).call(d3.axisLeft().scale(parallel_yScale[d])) })
             // }
             
-            function path(d) { // helper function to produce coordinates for path of line (receives filtered_dict keys as input)
+            function path(d) { // helper function to produce coordinates for path of line (receives selected_pokemon keys as input)
                 const result_path = d3.line()(stat_options1.map(p => {
                     // return [parallel_xScale(p), parallel_yScale[p](d[p])]
-                    return [parallel_xScale(p), parallel_yScale[p](filtered_dict[d][p])]
+                    return [parallel_xScale(p), parallel_yScale[p](selected_pokemon[d][p])]
                 }))
                 // console.log(result_path)
                 return result_path
