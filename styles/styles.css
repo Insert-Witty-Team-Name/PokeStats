@@ -1,0 +1,14 @@
+body {
+    margin: 0;
+    display: flex;
+    width: 1000px;
+    padding: 100px;
+}
+.selections {
+    padding-left: 20px;
+}
+strong {
+    display: flex;
+    width: 130px;
+    justify-content: space-between;
+}
