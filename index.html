@@ -45,7 +45,7 @@
 
             })
 
-            Draw();
+            drawScatterDotPlot();
             drawLines();
         }
 
@@ -111,32 +111,35 @@
 
 
         function update() { // tie both Draw and drawLines together
-            Draw();
+            drawScatterDotPlot();
             drawLines();
         }
 
-        function Draw() {
-            //var filtered_dict = dict.filter(key => curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false))
-            curr_types = []
-            document.querySelectorAll(".type").forEach((val) => {
-                if (val.checked) {
-                    curr_types.push(val.value)
-                }
-            })
-            var filtered_dict = Object.keys(dict).reduce(function (filtered_dict, key) {
-                if (curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false)) {
-                // if (curr_types.includes(dict[key].types[0])) {
-                    filtered_dict[key] = {
-                        "x": dict[key][x_axis],
-                        "y": dict[key][y_axis],
-                        "types": dict[key]["types"],
-                        "legendary": dict[key]["legendary"]
-                    };
-                }
-                return filtered_dict
-            }, {})
+        function drawScatterDotPlot() {
 
-            console.log(filtered_dict)
+            let generateFilteredDict = () => {
+                curr_types = []
+                document.querySelectorAll(".type").forEach((val) => {
+                    if (val.checked) {
+                        curr_types.push(val.value)
+                    }
+                })
+
+                let filtered_dict = Object.keys(dict).reduce(function (filtered_dict, key) {
+                    if (curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false)) {
+                    // if (curr_types.includes(dict[key].types[0])) {
+                        filtered_dict[key] = {
+                            "x": dict[key][x_axis],
+                            "y": dict[key][y_axis],
+                            "types": dict[key]["types"],
+                            "legendary": dict[key]["legendary"]
+                        };
+                    }
+                    return filtered_dict
+                }, {})
+
+                return filtered_dict
+            }
 
             let generateScales = () => {
                 let xScale = d3.scaleLinear()
@@ -150,117 +153,127 @@
                 return [xScale, yScale]
             }
 
-            let [xScale, yScale] = generateScales();
+            let drawAxes = () => {
+                const xAxis = d3.axisBottom()
+                                .scale(xScale);
 
+                const yAxis = d3.axisLeft()
+                                .scale(yScale);
 
-            var xAxis = d3.axisBottom()
-                .scale(xScale);
-            var yAxis = d3.axisLeft()
-                .scale(yScale);
-            if (scatter_svg.selectAll("#xaxis").size() == 0){
-                scatter_svg.append("g")
-                    .call(xAxis)
-                    .attr("transform", "translate(0, 600)")
-                    .attr("id", "xaxis");
-                scatter_svg.append("g")
-                    .call(yAxis)
-                    .attr("id", "yaxis");
+                if (scatter_svg.selectAll("#xaxis").size() == 0){
+                    scatter_svg.append("g")
+                               .call(xAxis)
+                               .attr("transform", "translate(0, 600)")
+                               .attr("id", "xaxis");
 
-                scatter_svg.append("text")
-                    .attr("text-anchor", "middle")
-                    .attr("x", (width - margin.left - margin.right) / 2)
-                    .attr("y", height)
-                    .attr("font-size", 30)
-                    .attr("id", "xtext")
-                    .text(x_axis)
+                    scatter_svg.append("g")
+                               .call(yAxis)
+                               .attr("id", "yaxis");
 
-                scatter_svg.append("text")
-                    .attr("text-anchor", "middle")
-                    .attr("x", -(height - margin.top - margin.bottom) / 2)
-                    .attr("y", -50)
-                    .attr("font-size", 30)
-                    .attr("id", "ytext")
-                    .attr("transform", "rotate(-90)")
-                    .text(y_axis)
-            } else {
-                scatter_svg.select("#xaxis")
-                    .transition()
-                        .duration(300)
-                        .call(xAxis);
-                scatter_svg.select("#yaxis")
-                    .transition()
-                        .duration(300)
-                        .call(yAxis);
-                scatter_svg.select("#xtext")
-                    .text(x_axis)
-                scatter_svg.select("#ytext")
-                    .text(y_axis)
-            }
-            scatter_svg.append("text")
-                .attr("id", "title")
-                .attr("text-anchor", "middle")
-                .attr("x", (width - margin.left - margin.right) / 2)
-                .attr("y", -margin.top/3)
-                .attr("font-size", 40)
-                .text(`${x_axis}vs ${y_axis}`)
-
-            let scatter_title = scatter_svg.selectAll("#title")
-
-            scatter_title.enter().append("text")
-                .attr("text-anchor", "middle")
-                .attr("x", (width - margin.left - margin.right) / 2)
-                .attr("y", -margin.top/3)
-                .attr("font-size", 40)
-                .text(`${x_axis} vs ${y_axis}`)
-            scatter_title.transition()
-                .duration(500)
-                .attr("text-anchor", "middle")
-                .attr("x", (width - margin.left - margin.right) / 2)
-                .attr("y", -margin.top/3)
-                .attr("font-size", 40)
-                .text(`${x_axis} vs ${y_axis}`)
-
-            var selection = scatter_svg.selectAll("circle")
-                .data(Object.keys(filtered_dict))
-
-            selection.enter().append("circle")
-                .attr("cx", key => xScale(filtered_dict[key].x))
-                .attr("cy", key => yScale(filtered_dict[key].y))
-                .attr("r", 5)
-                .attr("cursor", "pointer")
-                .attr("fill", key => getColor(filtered_dict[key].types[0]))
-                .on("click", function(d, i) {
-                    if (Object.keys(selected_pokemon).length < 6) {
-                        selected_pokemon[i] = dict[i]
-                        drawLines()
-                    }
-                })
-                .on('mouseover', function(d, i) {
-                    console.log(d.pageX)
-                    console.log(d.pageY)
                     scatter_svg.append("text")
-                        .attr("x", d.pageX - 200)
-                        .attr("y", d.pageY - 180)
-                        .attr("text-anchor", "middle")
-                        .attr("font-size", 20)
-                        .attr("class", "label")
-                        .text(i)
-                    })
-                .on('mouseout', function(d, i) {
-                    d3.select(".label").remove()
-                    })
+                               .attr("text-anchor", "middle")
+                               .attr("x", (width - margin.left - margin.right) / 2)
+                               .attr("y", height)
+                               .attr("font-size", 30)
+                               .attr("id", "xtext")
+                               .text(x_axis)
 
-            // Jacob: from my understanding, selection.transition() is equivalent to selection.join(update)
-            selection.transition()
-                .duration(500)
-                .attr("cx", key => xScale(filtered_dict[key].x))
-                .attr("cy", key => yScale(filtered_dict[key].y))
-                .attr("r", 5)
-                .attr("fill", key => getColor(filtered_dict[key].types[0]))
+                    scatter_svg.append("text")
+                               .attr("text-anchor", "middle")
+                               .attr("x", -(height - margin.top - margin.bottom) / 2)
+                               .attr("y", -50)
+                               .attr("font-size", 30)
+                               .attr("id", "ytext")
+                               .attr("transform", "rotate(-90)")
+                               .text(y_axis)
+                } else {
+                    scatter_svg.select("#xaxis")
+                               .transition()
+                               .duration(300)
+                               .call(xAxis);
+                    scatter_svg.select("#yaxis")
+                               .transition()
+                               .duration(300)
+                               .call(yAxis);
+                    scatter_svg.select("#xtext")
+                               .text(x_axis)
+                    scatter_svg.select("#ytext")
+                               .text(y_axis)
+                }
+
+            }
+
+            let drawPlotTitle = () => {
+                scatter_svg.append("text")
+                           .attr("id", "title")
+                           .attr("text-anchor", "middle")
+                           .attr("x", (width - margin.left - margin.right) / 2)
+                           .attr("y", -margin.top/3)
+                           .attr("font-size", 40)
+                           .text(`${x_axis} vs ${y_axis}`)
+
+                let scatter_title = scatter_svg.selectAll("#title")
+
+                scatter_title.enter()
+                             .append("text")
+                             .attr("text-anchor", "middle")
+                             .attr("x", (width - margin.left - margin.right) / 2)
+                             .attr("y", -margin.top/3)
+                             .attr("font-size", 40)
+                             .text(`${x_axis} vs ${y_axis}`)
+
+                scatter_title.transition()
+                             .duration(500)
+                             .attr("text-anchor", "middle")
+                             .attr("x", (width - margin.left - margin.right) / 2)
+                             .attr("y", -margin.top/3)
+                             .attr("font-size", 40)
+                             .text(`${x_axis} vs ${y_axis}`)
+            }
+
+            let drawDots = () => {
+                let selection = scatter_svg.selectAll("circle")
+                                           .data(Object.keys(filtered_dict))
+
+                selection.enter()
+                         .append("circle")
+                         .attr("cx", key => xScale(filtered_dict[key].x))
+                         .attr("cy", key => yScale(filtered_dict[key].y))
+                         .attr("r", 5)
+                         .attr("cursor", "pointer")
+                         .attr("fill", key => getColor(filtered_dict[key].types[0]))
+                         .on("click", function(d, i) {
+                             if (Object.keys(selected_pokemon).length < 6) {
+                                 selected_pokemon[i] = dict[i]
+                                 drawLines()
+                             }
+                         })
+                         .on('mouseover', function(d, i) {
+                             console.log(d.pageX)
+                             console.log(d.pageY)
+                             scatter_svg.append("text")
+                                        .attr("x", d.pageX - 200)
+                                        .attr("y", d.pageY - 180)
+                                        .attr("text-anchor", "middle")
+                                        .attr("font-size", 20)
+                                        .attr("class", "label")
+                                        .text(i)
+                         })
+                        .on('mouseout', function(d, i) {
+                            d3.select(".label").remove()
+                        })
+
+                // Jacob: from my understanding, selection.transition() is equivalent to selection.join(update)
+                selection.transition()
+                         .duration(500)
+                         .attr("cx", key => xScale(filtered_dict[key].x))
+                         .attr("cy", key => yScale(filtered_dict[key].y))
+                         .attr("r", 5)
+                         .attr("fill", key => getColor(filtered_dict[key].types[0]))
 
 
-            selection.exit().remove()
-        }
+                selection.exit().remove()
+            }
 
         function getColor(type) {
             switch (type) {
