@@ -135,13 +135,23 @@
                 }
                 return filtered_dict
             }, {})
+
             console.log(filtered_dict)
-            var xScale = d3.scaleLinear()
-                .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].x))
+
+            let generateScales = () => {
+                let xScale = d3.scaleLinear()
+                .domain([0, 260])
                 .range([0, 1000]);
-            var yScale = d3.scaleLinear()
-                .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].y))
+
+                let yScale = d3.scaleLinear()
+                .domain([0, 260])
                 .range([600, 0]);
+
+                return [xScale, yScale]
+            }
+
+            let [xScale, yScale] = generateScales();
+
 
             var xAxis = d3.axisBottom()
                 .scale(xScale);
@@ -335,38 +345,28 @@
                 return filtered_dict
             }, {})
 
-            // Find bounds of each stat over pokemon of selected types
-
-            // let filtered_stats_extents = { // Unneccessary
-            //     "HP": [],
-            //     "Attack": [],
-            //     "Defense": [],
-            //     "Sp_Attack": [],
-            //     "Sp_Defense": [],
-            //     "Speed": []
-            // }
-            // for (let i in filtered_dict) {
-            //     filtered_stats_extents['HP'].push(filtered_dict[i]['HP'])
-            //     filtered_stats_extents['Attack'].push(filtered_dict[i]['Attack'])
-            //     filtered_stats_extents['Defense'].push(filtered_dict[i]['Defense'])
-            //     filtered_stats_extents['Sp_Attack'].push(filtered_dict[i]['Sp_Attack'])
-            //     filtered_stats_extents['Sp_Defense'].push(filtered_dict[i]['Sp_Defense'])
-            //     filtered_stats_extents['Speed'].push(filtered_dict[i]['Speed'])
-            // }
 
 
             // Initializing Axes Scales for Parallel Coordinates
-            let parallel_yScale = {}
-            for(let i in stat_options1) {
-                stat_name = stat_options1[i]
-                parallel_yScale[stat_name] = d3.scaleLinear()
-                    // .domain(d3.extent(filtered_stats_extents[stat_name]))
-                    .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key][stat_name]))
-                    .range([height, 0])
+            let generateParallelCoordScales = () => {
+                let xScale = d3.scalePoint()
+                                        .domain(stat_options1)
+                                        .range([0, width-margin.left])
+
+                let yScale = {}
+
+                for(let i in stat_options1) {
+                    stat_name = stat_options1[i]
+                    yScale[stat_name] = d3.scaleLinear()
+                                                    .domain([0, 260])
+                                                    .range([height, 0])
+                }
+
+                return [xScale, yScale]
+
             }
-            let parallel_xScale = d3.scalePoint()
-                .domain(stat_options1)
-                .range([0, width-margin.left])
+
+            let [xScale, yScale] = generateParallelCoordScales();
 
 
             // Adding parallel axes // either works!
@@ -375,8 +375,8 @@
 
             parallel_yAxes.enter().append("g")
                 .attr("class", "parallel_yAxis")
-                .attr("transform", function(d) { return "translate(" + parallel_xScale(d) + ")"; })
-                .each(function(d) { d3.select(this).call(d3.axisLeft().scale(parallel_yScale[d])) })
+                .attr("transform", function(d) { return "translate(" + xScale(d) + ")"; })
+                .each(function(d) { d3.select(this).call(d3.axisLeft().scale(yScale[d])) })
                 .append("text")
                     .style("text-anchor", "middle")
                     .attr("y", -margin.top/2)
@@ -385,50 +385,18 @@
                     .attr("font-size", 25)
             parallel_yAxes.transition()
                 .duration(500)
-                .each(function(d) { d3.select(this).call(d3.axisLeft().scale(parallel_yScale[d])) })
+                .each(function(d) { d3.select(this).call(d3.axisLeft().scale(yScale[d])) })
 
             parallel_yAxes.exit().remove()
-
-            // Adding parallel axes // either works!
-            // if (parallel_svg.selectAll(".parallel_yAxis").size() == 0){
-            //     parallel_svg.selectAll(".parallel_yAxis")
-            //         .data(stat_options1)
-            //         .enter()
-            //         .append("g")
-            //         .attr("class", "parallel_yAxis")
-            //         .attr("transform", function(d) { return "translate(" + parallel_xScale(d) + ")"; })
-            //         .each(function(d) { d3.select(this).call(d3.axisLeft().scale(parallel_yScale[d])) })
-            //         .append("text")
-            //             .style("text-anchor", "middle")
-            //             .attr("y", -margin.top/2)
-            //             .text(function(d) { return d; })
-            //             .style("fill", "black")
-            //             .attr("font-size", 25)
-            // } else {
-            //     parallel_svg.selectAll(".parallel_yAxis")
-            //         .transition()
-            //             .duration(300)
-            //             .each(function(d) { d3.select(this).call(d3.axisLeft().scale(parallel_yScale[d])) })
-            // }
 
             function path(d) { // helper function to produce coordinates for path of line (receives filtered_dict keys as input)
                 const result_path = d3.line()(stat_options1.map(p => {
                     // return [parallel_xScale(p), parallel_yScale[p](d[p])]
-                    return [parallel_xScale(p), parallel_yScale[p](filtered_dict[d][p])]
+                    return [xScale(p), yScale[p](filtered_dict[d][p])]
                 }))
                 // console.log(result_path)
                 return result_path
             }
-            // console.log(Object.values(dict))
-            // parallel_svg.selectAll("path")
-            //     .data(Object.values(filtered_dict))
-            //     .enter()
-            //     .append("path")
-            //     .attr("class", "path")
-            //     .attr("d",  path)
-            //     .style("fill", "none")
-            //     .style("stroke", "#69b3a2")
-            //     .style("opacity", 0.5)
 
 
             // Initializing lines
