@@ -31,18 +31,28 @@
         let curr_types = [];
 
         // Selection Options
-        const stat_options1 = ["HP", "Attack", "Defense", "Sp_Attack", "Sp_Defense", "Speed"]
-        const stat_options2 = ["HP", "Attack", "Defense", "Sp_Attack", "Sp_Defense", "Speed"]
+        const stat_options1 = ["HP", "ATK", "DEF", "SP_ATK", "SP_DEF", "SPD"]
+        const stat_options2 = ["HP", "ATK", "DEF", "SP_ATK", "SP_DEF", "SPD"]
         const type_options = ["Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dark", "Dragon", "Steel", "Fairy"]
 
         // Dot Plot Axes
-        let x_axis = "Attack";
-        let y_axis = "Sp_Attack";
+        let x_axis = "ATK";
+        let y_axis = "SP_ATK";
 
-        // Scatter Plot
+        // Sizing constants
+        const full_width = 850;
+        const full_height = 498;
         const margin = { top: 70, right: 10, bottom: 20, left: 100 };
-        const width = 1280 - margin.left - margin.right;
-        const height = 750 - margin.top - margin.bottom;
+        const width = full_width - margin.left - margin.right;
+        const height = full_height - margin.top - margin.bottom;
+
+        const lowest_stat_points = 0;
+        const highest_stat_points = 260;
+
+        const lowest_scale_factor = 0;
+        const highest_x_scale_factor = 700;
+        const highest_y_scale_factor = 350;
+
 
         let initializeStatOptions = () => {
 
@@ -65,10 +75,10 @@
 
 
             // Set the default stats to be displayed.
-            d3.select("#stat1 > #Attack")
+            d3.select("#stat1 > #ATK")
                 .attr("selected", true);
 
-            d3.select("#stat2 > #Sp_Attack")
+            d3.select("#stat2 > #SP_ATK")
                 .attr("selected", true);
 
 
@@ -94,8 +104,8 @@
         let generateScatterDotPlot = () => {
             const scatter_svg = d3.select("#graphs")
                                   .append("svg")
-                                  .style("width", '1280px')
-                                  .style("height", '750')
+                                  .style("width", `${full_width}px`)
+                                  .style("height", `${full_height}px`)
                                   .style("outline", '3px solid black')
                                   .attr("class", "graph")
                                   .attr("id", "scatter_svg")
@@ -115,7 +125,6 @@
 
                 let filtered_dict = Object.keys(dict).reduce(function (filtered_dict, key) {
                     if (curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false)) {
-                    // if (curr_types.includes(dict[key].types[0])) {
                         filtered_dict[key] = {
                             "x": dict[key][x_axis],
                             "y": dict[key][y_axis],
@@ -131,12 +140,12 @@
 
             let generateScales = () => {
                 let xScale = d3.scaleLinear()
-                .domain([0, 260])
-                .range([0, 1000]);
+                .domain([lowest_stat_points, highest_stat_points])
+                .range([lowest_scale_factor, highest_x_scale_factor]);
 
                 let yScale = d3.scaleLinear()
-                .domain([0, 260])
-                .range([600, 0]);
+                .domain([lowest_stat_points, highest_stat_points])
+                .range([highest_y_scale_factor, lowest_scale_factor]);
 
                 return [xScale, yScale]
             }
@@ -151,7 +160,7 @@
                 if (scatter_svg.selectAll("#xaxis").size() == 0){
                     scatter_svg.append("g")
                                .call(xAxis)
-                               .attr("transform", "translate(0, 600)")
+                               .attr("transform", `translate(0, ${highest_y_scale_factor})`)
                                .attr("id", "xaxis");
 
                     scatter_svg.append("g")
@@ -227,7 +236,7 @@
                          .append("circle")
                          .attr("cx", key => xScale(filtered_dict[key].x))
                          .attr("cy", key => yScale(filtered_dict[key].y))
-                         .attr("r", 5)
+                         .attr("r", 4)
                          .attr("cursor", "pointer")
                          .attr("fill", key => getColor(filtered_dict[key].types[0]))
                          .on("click", function(d, i) {
@@ -277,8 +286,8 @@
         let generateParallelCoord = () => {
             const parallel_svg = d3.select("#graphs")
                                    .append("svg")
-                                   .style("width", '1280px')
-                                   .style("height", '750')
+                                   .style("width", `${full_width}px`)
+                                   .style("height", `${full_height}px`)
                                    .style("outline", '3px solid black')
                                    .attr("class", "graph")
                                    .attr("id", "parallel_svg")
@@ -303,11 +312,11 @@
 
                         filtered_dict[key] = {
                             "HP": dict[key]['HP'],
-                            "Attack": dict[key]['Attack'],
-                            "Defense": dict[key]['Defense'],
-                            "Sp_Attack": dict[key]['Sp_Attack'],
-                            "Sp_Defense": dict[key]['Sp_Defense'],
-                            "Speed": dict[key]['Speed'],
+                            "ATK": dict[key]['ATK'],
+                            "DEF": dict[key]['DEF'],
+                            "SP_ATK": dict[key]['SP_ATK'],
+                            "SP_DEF": dict[key]['SP_DEF'],
+                            "SPD": dict[key]['SPD'],
                             "types": dict[key]["types"]
                         };
                     }
@@ -328,8 +337,8 @@
                 for(let i in stat_options1) {
                     stat_name = stat_options1[i]
                     yScale[stat_name] = d3.scaleLinear()
-                                                    .domain([0, 260])
-                                                    .range([height, 0])
+                                          .domain([lowest_stat_points, highest_stat_points])
+                                          .range([height, 0])
                 }
 
                 return [xScale, yScale]
@@ -433,11 +442,11 @@
             const data = await d3.csv("/pokedex.csv", function(d) {
                 dict[d.name] = {
                     "HP": parseInt(d.hp),
-                    "Attack": parseInt(d.attack),
-                    "Defense": parseInt(d.defense),
-                    "Sp_Attack": parseInt(d.sp_attack),
-                    "Sp_Defense": parseInt(d.sp_defense),
-                    "Speed": parseInt(d.speed),
+                    "ATK": parseInt(d.attack),
+                    "DEF": parseInt(d.defense),
+                    "SP_ATK": parseInt(d.sp_attack),
+                    "SP_DEF": parseInt(d.sp_defense),
+                    "SPD": parseInt(d.speed),
                     "types": d.type_number == 2 ? [d.type_1, d.type_2] : [d.type_1],
                     "legendary": d.status
                 }
