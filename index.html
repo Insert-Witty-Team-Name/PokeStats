@@ -17,7 +17,7 @@
 </style>
 <html>
     <head>
-        <!-- <link rel="stylesheet" href="exploration.css"> -->
+        <link rel="stylesheet" href="styles/styles.css">
         <title>PokéStats</title>
     </head>
     <body>
@@ -33,14 +33,14 @@
                 <div id="currTeam"></div>
             </div>
         </div>
-        
+
     </body>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
         var dict = {};
         var curr_types = [];
         var selected_pokemon = {};
-        
+
         async function ready() {
             const data = await d3.csv("/pokedex.csv", function(d) {
                 // console.log(d)
@@ -54,9 +54,9 @@
                     "types": d.type_number == 2 ? [d.type_1, d.type_2] : [d.type_1],
                     "legendary": d.status
                 }
-                
+
             })
-            
+
             Draw();
             drawLines();
         }
@@ -75,7 +75,7 @@
             .attr("class", "graph")
             .attr("id", "scatter_svg")
             .append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
+
 
         // var dict = {};
         var x_axis = "Attack";
@@ -120,8 +120,8 @@
             <label for=${val}>${val}</label><br>`
         })
 
-        
-        
+
+
         function update() { // tie both Draw and drawLines together
             Draw();
             drawLines();
@@ -154,7 +154,7 @@
             var yScale = d3.scaleLinear()
                 .domain(d3.extent(Object.keys(filtered_dict), key => filtered_dict[key].y))
                 .range([600, 0]);
-            
+
             var xAxis = d3.axisBottom()
                 .scale(xScale);
             var yAxis = d3.axisLeft()
@@ -174,8 +174,8 @@
                     .attr("y", height)
                     .attr("font-size", 30)
                     .attr("id", "xtext")
-                    .text(x_axis)  
-                
+                    .text(x_axis)
+
                 scatter_svg.append("text")
                     .attr("text-anchor", "middle")
                     .attr("x", -(height - margin.top - margin.bottom) / 2)
@@ -204,10 +204,10 @@
                 .attr("x", (width - margin.left - margin.right) / 2)
                 .attr("y", -margin.top/3)
                 .attr("font-size", 40)
-                .text(`${x_axis}vs ${y_axis}`)     
+                .text(`${x_axis}vs ${y_axis}`)
 
             let scatter_title = scatter_svg.selectAll("#title")
-                
+
             scatter_title.enter().append("text")
                 .attr("text-anchor", "middle")
                 .attr("x", (width - margin.left - margin.right) / 2)
@@ -224,7 +224,7 @@
 
             var selection = scatter_svg.selectAll("circle")
                 .data(Object.keys(filtered_dict))
-                                
+
             selection.enter().append("circle")
                 .attr("cx", key => xScale(filtered_dict[key].x))
                 .attr("cy", key => yScale(filtered_dict[key].y))
@@ -259,48 +259,48 @@
                 .attr("cy", key => yScale(filtered_dict[key].y))
                 .attr("r", 5)
                 .attr("fill", key => getColor(filtered_dict[key].types[0]))
-                
-                
+
+
             selection.exit().remove()
         }
 
         function getColor(type) {
             switch (type) {
-                case "Normal": 
+                case "Normal":
                     return "#A8A77A";
-                case "Fire": 
+                case "Fire":
                     return "#EE8130";
-                case "Water": 
+                case "Water":
                     return "#6390F0";
-                case "Electric": 
+                case "Electric":
                     return "#F7D02C";
-                case "Grass": 
+                case "Grass":
                     return "#7AC74C";
-                case "Ice": 
+                case "Ice":
                     return "#96D9D6";
-                case "Fighting": 
+                case "Fighting":
                     return "#C22E28";
-                case "Poison": 
+                case "Poison":
                     return "#A33EA1";
-                case "Ground": 
+                case "Ground":
                     return "#E2BF65";
-                case "Flying": 
+                case "Flying":
                     return "#A98FF3";
-                case "Psychic": 
+                case "Psychic":
                     return "#F95587";
-                case "Bug": 
+                case "Bug":
                     return "#A6B91A";
-                case "Rock": 
+                case "Rock":
                     return "#B6A136";
-                case "Ghost": 
+                case "Ghost":
                     return "#735797";
-                case "Dragon": 
+                case "Dragon":
                     return "#6F35FC";
-                case "Dark": 
+                case "Dark":
                     return "#705746";
-                case "Steel": 
+                case "Steel":
                     return "#B7B7CE";
-                case "Fairy": 
+                case "Fairy":
                     return "#D685AD";
                 default:
                     console.log("something wrong with types")
@@ -317,7 +317,7 @@
             .attr("id", "parallel_svg")
             .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
+
         function deletePokemon(event) {
             console.log(event)
             delete selected_pokemon[event.target.innerHTML]
@@ -348,7 +348,7 @@
             }, {})
 
             // Find bounds of each stat over pokemon of selected types
-            
+
             // let filtered_stats_extents = { // Unneccessary
             //     "HP": [],
             //     "Attack": [],
@@ -365,7 +365,7 @@
             //     filtered_stats_extents['Sp_Defense'].push(filtered_dict[i]['Sp_Defense'])
             //     filtered_stats_extents['Speed'].push(filtered_dict[i]['Speed'])
             // }
-            
+
 
             // Initializing Axes Scales for Parallel Coordinates
             let parallel_yScale = {}
@@ -377,14 +377,14 @@
                     .range([height, 0])
             }
             let parallel_xScale = d3.scalePoint()
-                .domain(stat_options1)    
+                .domain(stat_options1)
                 .range([0, width-margin.left])
 
 
             // Adding parallel axes // either works!
             let parallel_yAxes = parallel_svg.selectAll(".parallel_yAxis")
                 .data(stat_options1)
-            
+
             parallel_yAxes.enter().append("g")
                 .attr("class", "parallel_yAxis")
                 .attr("transform", function(d) { return "translate(" + parallel_xScale(d) + ")"; })
@@ -400,7 +400,7 @@
                 .each(function(d) { d3.select(this).call(d3.axisLeft().scale(parallel_yScale[d])) })
 
             parallel_yAxes.exit().remove()
-            
+
             // Adding parallel axes // either works!
             // if (parallel_svg.selectAll(".parallel_yAxis").size() == 0){
             //     parallel_svg.selectAll(".parallel_yAxis")
@@ -422,7 +422,7 @@
             //             .duration(300)
             //             .each(function(d) { d3.select(this).call(d3.axisLeft().scale(parallel_yScale[d])) })
             // }
-            
+
             function path(d) { // helper function to produce coordinates for path of line (receives filtered_dict keys as input)
                 const result_path = d3.line()(stat_options1.map(p => {
                     // return [parallel_xScale(p), parallel_yScale[p](d[p])]
@@ -446,7 +446,7 @@
             // Initializing lines
             let all_paths = parallel_svg.selectAll(".line")
                 .data(Object.keys(selected_pokemon))
-                                
+
             all_paths.enter().append("path")
                 .attr("d",  path)
                 .attr("class", "line")
@@ -478,11 +478,11 @@
                 .style("fill", "none")
                 .style("stroke", key => getColor(selected_pokemon[key].types[0]))
                 .attr("d",  path)
-                
+
             all_paths.exit().remove()
         }
 
-        
+
 
 
         ready();
