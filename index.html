@@ -25,6 +25,25 @@
     </body>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
+        // Data Containers
+        const dict = {};
+        const selected_pokemon = {};
+        let curr_types = [];
+
+        // Selection Options
+        const stat_options1 = ["HP", "Attack", "Defense", "Sp_Attack", "Sp_Defense", "Speed"]
+        const stat_options2 = ["HP", "Attack", "Defense", "Sp_Attack", "Sp_Defense", "Speed"]
+        const type_options = ["Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dark", "Dragon", "Steel", "Fairy"]
+
+        // Dot Plot Axes
+        let x_axis = "Attack";
+        let y_axis = "Sp_Attack";
+
+        // Scatter Plot
+        const margin = { top: 70, right: 10, bottom: 20, left: 100 };
+        const width = 1280 - margin.left - margin.right;
+        const height = 750 - margin.top - margin.bottom;
+
         // Get the color associated with the Type string
         let getColor = (type) => {
             switch (type) {
@@ -90,65 +109,68 @@
         }
 
 
-        // Scatter Plot
-        var margin = { top: 70, right: 10, bottom: 20, left: 100 };
-        var width = 1280 - margin.left - margin.right;
-        var height = 750 - margin.top - margin.bottom;
+        let initializeStatOptions = () => {
 
-        // Adding new svg for Scatter Plot
-        var scatter_svg = d3.select("#graphs").append("svg")
-            .style("width", '1280px')
-            .style("height", '750')
-            .style("outline", '3px solid black')
-            .attr("class", "graph")
-            .attr("id", "scatter_svg")
-            .append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-        // var dict = {};
-        var x_axis = "Attack";
-        var y_axis = "Sp_Attack";
-        // var curr_types = [];
-
-        var stat_options1 = ["HP", "Attack", "Defense", "Sp_Attack", "Sp_Defense", "Speed"]
-        var stat_options2 = ["HP", "Attack", "Defense", "Sp_Attack", "Sp_Defense", "Speed"]
-        var type_options = ["Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dark", "Dragon", "Steel", "Fairy"]
-
-        d3.select("#stat1")
+            // Populate the selections with their respective options.
+            d3.select("#stat1")
             .selectAll("myOptions")
                 .data(stat_options1)
             .enter().append('option')
             .text(d => d)
             .attr("id", d => d)
             .attr("value", d => d);
-        d3.select("#stat2")
-            .selectAll("myOptions")
-                .data(stat_options2)
-            .enter().append('option')
-            .text(d => d)
-            .attr("id", d => d)
-            .attr("value", d => d);
-        d3.select("#stat1 > #Attack")
-            .attr("selected", true)
-        d3.select("#stat2 > #Sp_Attack")
-            .attr("selected", true)
 
-        d3.select("#stat1").on("change", function(d) {
-            x_axis = d3.select(this).property("value");
-            Draw();
-        })
-        d3.select("#stat2").on("change", function(d) {
-            y_axis = d3.select(this).property("value");
-            Draw();
-        })
-
-        type_options.forEach((val) => {
-            document.querySelector("#types").innerHTML +=`
-            <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" >
-            <label for=${val}>${val}</label><br>`
-        })
+            d3.select("#stat2")
+                .selectAll("myOptions")
+                    .data(stat_options2)
+                .enter().append('option')
+                .text(d => d)
+                .attr("id", d => d)
+                .attr("value", d => d);
 
 
+            // Set the default stats to be displayed.
+            d3.select("#stat1 > #Attack")
+                .attr("selected", true);
+
+            d3.select("#stat2 > #Sp_Attack")
+                .attr("selected", true);
+
+
+            // Provide each selection an event listener for changing options.
+            d3.select("#stat1").on("change", function(d) {
+                x_axis = d3.select(this).property("value");
+                drawScatterDotPlot();
+            });
+            d3.select("#stat2").on("change", function(d) {
+                y_axis = d3.select(this).property("value");
+                drawScatterDotPlot();
+            });
+        }
+
+        let initializeTypes = () => {
+            type_options.forEach((val) => {
+                document.querySelector("#types").innerHTML +=`
+                <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" >
+                <label for=${val}>${val}</label><br>`;
+            })
+        }
+
+
+
+        initializeStatOptions();
+        initializeTypes();
+
+
+        // Adding new svg for Scatter Plot
+        const scatter_svg = d3.select("#graphs")
+                              .append("svg")
+                              .style("width", '1280px')
+                              .style("height", '750')
+                              .style("outline", '3px solid black')
+                              .attr("class", "graph")
+                              .attr("id", "scatter_svg")
+                              .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         function update() { // tie both Draw and drawLines together
             drawScatterDotPlot();
@@ -329,7 +351,6 @@
             drawDots();
 
         }
-
 
         // Adding new svg for Parallel Coordinates
         var parallel_svg = d3.select("#graphs").append("svg")
