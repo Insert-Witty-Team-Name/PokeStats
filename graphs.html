@@ -137,9 +137,9 @@
                     curr_types.push(val.value)
                 }
             })
-            if (curr_types.length==0) {
-                curr_types = type_options
-            }
+            // if (curr_types.length==0) {
+            //     curr_types = type_options
+            // }
             var filtered_dict = Object.keys(dict).reduce(function (filtered_dict, key) {
                 if (curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false)) {
                 // if (curr_types.includes(dict[key].types[0])) {
