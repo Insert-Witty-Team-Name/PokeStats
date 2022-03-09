@@ -9,6 +9,7 @@
         <title>PokéStats</title>
     </head>
     <body>
+        <h1>PokéStats</h1>
         <div id="graphs"></div>
         <div class="selections">
             <div>
@@ -140,12 +141,12 @@
 
             let generateScales = () => {
                 let xScale = d3.scaleLinear()
-                .domain([lowest_stat_points, highest_stat_points])
-                .range([lowest_scale_factor, highest_x_scale_factor]);
+                    .domain([lowest_stat_points, highest_stat_points])
+                    .range([lowest_scale_factor, highest_x_scale_factor]);
 
                 let yScale = d3.scaleLinear()
-                .domain([lowest_stat_points, highest_stat_points])
-                .range([highest_y_scale_factor, lowest_scale_factor]);
+                    .domain([lowest_stat_points, highest_stat_points])
+                    .range([highest_y_scale_factor, lowest_scale_factor]);
 
                 return [xScale, yScale]
             }
@@ -402,8 +403,8 @@
                          })
                          .on('mouseover', function(d, i) {
                              parallel_svg.append("text")
-                                 .attr("x", d.pageX - 200)
-                                 .attr("y", d.pageY - 925)
+                                 .attr("x", d.pageX)
+                                 .attr("y", d.pageY)
                                  .attr("text-anchor", "middle")
                                  .attr("font-size", 20)
                                  .attr("class", "label2")
