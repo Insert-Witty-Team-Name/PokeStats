@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="styles/sanitize.css">
+        <link rel="stylesheet" href="styles/styles.css">
+        <title>PokéStats</title>
+    </head>
+    <body>
+        <div id="graphs"></div>
+        <div class="selections">
+            <div>
+                <strong>x: <select id="stat1" class="dropdown"></select></strong><br>
+                <strong>y: <select id="stat2" class="dropdown"></select></strong><br>
+            </div>
+            <form id="types"></form>
+            <div>
+                <h1>Current Team</h1>
+                <div id="currTeam"></div>
+            </div>
+        </div>
+
+    </body>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Data Containers
+        const dict = {};
+        const selected_pokemon = {};
+        let curr_types = [];
+
+        // Selection Options
+        const stat_options1 = ["HP", "ATK", "DEF", "SP_ATK", "SP_DEF", "SPD"]
+        const stat_options2 = ["HP", "ATK", "DEF", "SP_ATK", "SP_DEF", "SPD"]
+        const type_options = ["Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dark", "Dragon", "Steel", "Fairy"]
+
+        // Dot Plot Axes
+        let x_axis = "ATK";
+        let y_axis = "SP_ATK";
+
+        // Sizing constants
+        const full_width = 850;
+        const full_height = 498;
+        const margin = { top: 70, right: 10, bottom: 20, left: 100 };
+        const width = full_width - margin.left - margin.right;
+        const height = full_height - margin.top - margin.bottom;
+
+        const lowest_stat_points = 0;
+        const highest_stat_points = 260;
+
+        const lowest_scale_factor = 0;
+        const highest_x_scale_factor = 700;
+        const highest_y_scale_factor = 350;
+
+
+        let initializeStatOptions = () => {
+
+            // Populate the selections with their respective options.
+            d3.select("#stat1")
+            .selectAll("myOptions")
+                .data(stat_options1)
+            .enter().append('option')
+            .text(d => d)
+            .attr("id", d => d)
+            .attr("value", d => d);
+
+            d3.select("#stat2")
+                .selectAll("myOptions")
+                    .data(stat_options2)
+                .enter().append('option')
+                .text(d => d)
+                .attr("id", d => d)
+                .attr("value", d => d);
+
+
+            // Set the default stats to be displayed.
+            d3.select("#stat1 > #ATK")
+                .attr("selected", true);
+
+            d3.select("#stat2 > #SP_ATK")
+                .attr("selected", true);
+
+
+            // Provide each selection an event listener for changing options.
+            d3.select("#stat1").on("change", function(d) {
+                x_axis = d3.select(this).property("value");
+                update();
+            });
+            d3.select("#stat2").on("change", function(d) {
+                y_axis = d3.select(this).property("value");
+                update();
+            });
+        }
+
+        let initializeTypes = () => {
+            type_options.forEach((val) => {
+                document.querySelector("#types").innerHTML +=`
+                <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" >
+                <label for=${val}>${val}</label><br>`;
+            })
+        }
+
+        let generateScatterDotPlot = () => {
+            const scatter_svg = d3.select("#graphs")
+                                  .append("svg")
+                                  .style("width", `${full_width}px`)
+                                  .style("height", `${full_height}px`)
+                                  .style("outline", '3px solid black')
+                                  .attr("class", "graph")
+                                  .attr("id", "scatter_svg")
+                                  .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+            return scatter_svg;
+        }
+
+        let drawScatterDotPlot = () => {
+
+            let generateFilteredDict = () => {
+                curr_types = []
+                document.querySelectorAll(".type").forEach((val) => {
+                    if (val.checked) {
+                        curr_types.push(val.value)
+                    }
+                })
+
+                let filtered_dict = Object.keys(dict).reduce(function (filtered_dict, key) {
+                    if (curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false)) {
+                        filtered_dict[key] = {
+                            "x": dict[key][x_axis],
+                            "y": dict[key][y_axis],
+                            "types": dict[key]["types"],
+                            "legendary": dict[key]["legendary"]
+                        };
+                    }
+                    return filtered_dict
+                }, {})
+
+                return filtered_dict
+            }
+
+            let generateScales = () => {
+                let xScale = d3.scaleLinear()
+                .domain([lowest_stat_points, highest_stat_points])
+                .range([lowest_scale_factor, highest_x_scale_factor]);
+
+                let yScale = d3.scaleLinear()
+                .domain([lowest_stat_points, highest_stat_points])
+                .range([highest_y_scale_factor, lowest_scale_factor]);
+
+                return [xScale, yScale]
+            }
+
+            let drawAxes = () => {
+                const xAxis = d3.axisBottom()
+                                .scale(xScale);
+
+                const yAxis = d3.axisLeft()
+                                .scale(yScale);
+
+                if (scatter_svg.selectAll("#xaxis").size() == 0){
+                    scatter_svg.append("g")
+                               .call(xAxis)
+                               .attr("transform", `translate(0, ${highest_y_scale_factor})`)
+                               .attr("id", "xaxis");
+
+                    scatter_svg.append("g")
+                               .call(yAxis)
+                               .attr("id", "yaxis");
+
+                    scatter_svg.append("text")
+                               .attr("text-anchor", "middle")
+                               .attr("x", (width - margin.left - margin.right) / 2)
+                               .attr("y", height)
+                               .attr("font-size", 30)
+                               .attr("id", "xtext")
+                               .text(x_axis)
+
+                    scatter_svg.append("text")
+                               .attr("text-anchor", "middle")
+                               .attr("x", -(height - margin.top - margin.bottom) / 2)
+                               .attr("y", -50)
+                               .attr("font-size", 30)
+                               .attr("id", "ytext")
+                               .attr("transform", "rotate(-90)")
+                               .text(y_axis)
+                } else {
+                    scatter_svg.select("#xaxis")
+                               .transition()
+                               .duration(300)
+                               .call(xAxis);
+                    scatter_svg.select("#yaxis")
+                               .transition()
+                               .duration(300)
+                               .call(yAxis);
+                    scatter_svg.select("#xtext")
+                               .text(x_axis)
+                    scatter_svg.select("#ytext")
+                               .text(y_axis)
+                }
+
+            }
+
+            let drawPlotTitle = () => {
+                scatter_svg.append("text")
+                           .attr("id", "title")
+                           .attr("text-anchor", "middle")
+                           .attr("x", (width - margin.left - margin.right) / 2)
+                           .attr("y", -margin.top/3)
+                           .attr("font-size", 40)
+                           .text(`${x_axis} vs ${y_axis}`)
+
+                let scatter_title = scatter_svg.selectAll("#title")
+
+                scatter_title.enter()
+                             .append("text")
+                             .attr("text-anchor", "middle")
+                             .attr("x", (width - margin.left - margin.right) / 2)
+                             .attr("y", -margin.top/3)
+                             .attr("font-size", 40)
+                             .text(`${x_axis} vs ${y_axis}`)
+
+                scatter_title.transition()
+                             .duration(500)
+                             .attr("text-anchor", "middle")
+                             .attr("x", (width - margin.left - margin.right) / 2)
+                             .attr("y", -margin.top/3)
+                             .attr("font-size", 40)
+                             .text(`${x_axis} vs ${y_axis}`)
+            }
+
+            let drawDots = () => {
+                let selection = scatter_svg.selectAll("circle")
+                                           .data(Object.keys(filtered_dict))
+
+                selection.enter()
+                         .append("circle")
+                         .attr("cx", key => xScale(filtered_dict[key].x))
+                         .attr("cy", key => yScale(filtered_dict[key].y))
+                         .attr("r", 4)
+                         .attr("cursor", "pointer")
+                         .attr("fill", key => getColor(filtered_dict[key].types[0]))
+                         .on("click", function(d, i) {
+                             if (Object.keys(selected_pokemon).length < 6) {
+                                 selected_pokemon[i] = dict[i]
+                                 drawParallelCoord();
+                             }
+                         })
+                         .on('mouseover', function(d, i) {
+                             scatter_svg.append("text")
+                                        .attr("x", d.pageX - 200)
+                                        .attr("y", d.pageY - 180)
+                                        .attr("text-anchor", "middle")
+                                        .attr("font-size", 20)
+                                        .attr("class", "label")
+                                        .text(i)
+                         })
+                        .on('mouseout', function(d, i) {
+                            d3.select(".label").remove()
+                        })
+
+                // Jacob: from my understanding, selection.transition() is equivalent to selection.join(update)
+                selection.transition()
+                         .duration(500)
+                         .attr("cx", key => xScale(filtered_dict[key].x))
+                         .attr("cy", key => yScale(filtered_dict[key].y))
+                         .attr("r", 5)
+                         .attr("fill", key => getColor(filtered_dict[key].types[0]))
+
+
+                selection.exit().remove()
+            }
+
+
+            let filtered_dict = generateFilteredDict();
+
+            let [xScale, yScale] = generateScales();
+
+            drawAxes();
+
+            drawPlotTitle();
+
+            drawDots();
+
+        }
+
+        let generateParallelCoord = () => {
+            const parallel_svg = d3.select("#graphs")
+                                   .append("svg")
+                                   .style("width", `${full_width}px`)
+                                   .style("height", `${full_height}px`)
+                                   .style("outline", '3px solid black')
+                                   .attr("class", "graph")
+                                   .attr("id", "parallel_svg")
+                                   .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+            return parallel_svg;
+        }
+
+        let drawParallelCoord = () => {
+
+            let generateFilteredDict = () => {
+                document.querySelector("#currTeam").innerHTML = ``;
+
+                Object.keys(selected_pokemon).forEach((pokemon) => {
+
+                document.querySelector("#currTeam").innerHTML += `
+                    <p onclick="deletePokemon(event)" style="cursor: pointer;">${pokemon}</p>`
+                })
+
+                // use the same curr_types list to reference selected types
+                const filtered_dict = Object.keys(dict).reduce(function (filtered_dict, key) {
+                    if (curr_types.includes(dict[key].types[0]) || (dict[key].types.length == 2 ? curr_types.includes(dict[key].types[1]) : false)) {
+
+                        filtered_dict[key] = {
+                            "HP": dict[key]['HP'],
+                            "ATK": dict[key]['ATK'],
+                            "DEF": dict[key]['DEF'],
+                            "SP_ATK": dict[key]['SP_ATK'],
+                            "SP_DEF": dict[key]['SP_DEF'],
+                            "SPD": dict[key]['SPD'],
+                            "types": dict[key]["types"]
+                        };
+                    }
+                    return filtered_dict
+                }, {})
+
+                return filtered_dict;
+            }
+
+            // Initializing Axes Scales for Parallel Coordinates
+            let generateParallelCoordScales = () => {
+                let xScale = d3.scalePoint()
+                                        .domain(stat_options1)
+                                        .range([0, width-margin.left])
+
+                let yScale = {}
+
+                for(let i in stat_options1) {
+                    stat_name = stat_options1[i]
+                    yScale[stat_name] = d3.scaleLinear()
+                                          .domain([lowest_stat_points, highest_stat_points])
+                                          .range([height, 0])
+                }
+
+                return [xScale, yScale]
+
+            }
+
+            let drawAxes = () => {
+                // Adding parallel axes // either works!
+                let parallel_yAxes = parallel_svg.selectAll(".parallel_yAxis")
+                                                 .data(stat_options1)
+
+                parallel_yAxes.enter()
+                              .append("g")
+                              .attr("class", "parallel_yAxis")
+                              .attr("transform", function(d) { return `translate(${xScale(d)})`; })
+                              .each(function(d) { d3.select(this)
+                                                    .call(d3.axisLeft()
+                                                            .scale(yScale[d])) })
+                              .append("text")
+                              .style("text-anchor", "middle")
+                              .attr("y", -margin.top/2)
+                              .text(function(d) { return d; })
+                              .style("fill", "black")
+                              .attr("font-size", 25)
+
+                parallel_yAxes.transition()
+                            .duration(500)
+                            .each(function(d) { d3.select(this)
+                                                    .call(d3.axisLeft()
+                                                            .scale(yScale[d])) })
+
+                parallel_yAxes.exit().remove()
+            }
+
+            let drawLines = () => {
+                // helper function to produce coordinates for path of line (receives filtered_dict keys as input)
+                let path = (d) => {
+                    const result_path = d3.line()(stat_options1.map(p => {
+                        // return [parallel_xScale(p), parallel_yScale[p](d[p])]
+                        return [xScale(p), yScale[p](filtered_dict[d][p])]
+                    }))
+                    return result_path
+                }
+
+                // Initializing lines
+                let all_paths = parallel_svg.selectAll(".line")
+                                            .data(Object.keys(selected_pokemon))
+
+                all_paths.enter()
+                         .append("path")
+                         .attr("d",  path)
+                         .attr("class", "line")
+                         .style("fill", "none")
+                         .style("stroke-width", 3)
+                         .attr("cursor", "pointer")
+                         .style("stroke", key => getColor(selected_pokemon[key].types[0]))
+                         .on("click", function(d, i) {
+                             delete selected_pokemon[i]
+                             d3.select(".label2").remove()
+                             drawParallelCoord();
+                         })
+                         .on('mouseover', function(d, i) {
+                             parallel_svg.append("text")
+                                 .attr("x", d.pageX - 200)
+                                 .attr("y", d.pageY - 925)
+                                 .attr("text-anchor", "middle")
+                                 .attr("font-size", 20)
+                                 .attr("class", "label2")
+                                 .text(i)
+                             })
+                         .on('mouseout', function(d, i) {
+                             d3.select(".label2").remove()
+                             })
+
+                all_paths.transition()
+                         .duration(500)
+                         .style("fill", "none")
+                         .style("stroke", key => getColor(selected_pokemon[key].types[0]))
+                         .attr("d",  path)
+
+                all_paths.exit().remove()
+            }
+
+            let filtered_dict = generateFilteredDict();
+
+            let [xScale, yScale] = generateParallelCoordScales();
+
+            drawAxes();
+
+            drawLines();
+
+        }
+
+        // Tie both drawScatterDotPlot and drawLines together
+        let update = () => {
+            drawScatterDotPlot();
+            drawParallelCoord();;
+        }
+
+        let ready = async () => {
+            const data = await d3.csv("/pokedex.csv", function(d) {
+                dict[d.name] = {
+                    "HP": parseInt(d.hp),
+                    "ATK": parseInt(d.attack),
+                    "DEF": parseInt(d.defense),
+                    "SP_ATK": parseInt(d.sp_attack),
+                    "SP_DEF": parseInt(d.sp_defense),
+                    "SPD": parseInt(d.speed),
+                    "types": d.type_number == 2 ? [d.type_1, d.type_2] : [d.type_1],
+                    "legendary": d.status
+                }
+
+            })
+
+            update();
+        }
+
+        // Get the color associated with the Type string
+        let getColor = (type) => {
+            switch (type) {
+                case "Normal":
+                    return "#A8A77A";
+                case "Fire":
+                    return "#EE8130";
+                case "Water":
+                    return "#6390F0";
+                case "Electric":
+                    return "#F7D02C";
+                case "Grass":
+                    return "#7AC74C";
+                case "Ice":
+                    return "#96D9D6";
+                case "Fighting":
+                    return "#C22E28";
+                case "Poison":
+                    return "#A33EA1";
+                case "Ground":
+                    return "#E2BF65";
+                case "Flying":
+                    return "#A98FF3";
+                case "Psychic":
+                    return "#F95587";
+                case "Bug":
+                    return "#A6B91A";
+                case "Rock":
+                    return "#B6A136";
+                case "Ghost":
+                    return "#735797";
+                case "Dragon":
+                    return "#6F35FC";
+                case "Dark":
+                    return "#705746";
+                case "Steel":
+                    return "#B7B7CE";
+                case "Fairy":
+                    return "#D685AD";
+                default:
+                    console.error("something wrong with types")
+            }
+        }
+
+        let deletePokemon = (event) => {
+            delete selected_pokemon[event.target.innerHTML];
+            update();
+        }
+
+        initializeStatOptions();
+        initializeTypes();
+
+        const scatter_svg = generateScatterDotPlot();
+
+        const parallel_svg = generateParallelCoord();
+
+        ready();
+    </script>
+</html>
