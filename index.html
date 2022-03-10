@@ -9,19 +9,28 @@
         <title>PokéStats</title>
     </head>
     <body>
-        <div id="graphs"></div>
-        <div class="selections">
-            <div>
-                <strong>x: <select id="stat1" class="dropdown"></select></strong><br>
-                <strong>y: <select id="stat2" class="dropdown"></select></strong><br>
+        <!-- <h1>PokéStats</h1> -->
+        <div id="logo">
+            <img src="logo.png">
+        </div>
+        <div id="content">
+            <div id="graphs"></div>
+            <div class="selections">
+                <div>
+                    <div class="section-title">Select Stats:</div>
+                    <strong>Stat 1: <select id="stat1" class="dropdown"></select></strong><br>
+                    <strong>Stat 2: <select id="stat2" class="dropdown"></select></strong><br>
+                </div>
+                <div class="section-title">Select a Type:</div>
+                <form id="types">
+                </form>
+
             </div>
-            <form id="types"></form>
-            <div>
+            <div class="current-team">
                 <h1>Current Team</h1>
                 <div id="currTeam"></div>
             </div>
         </div>
-
     </body>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
@@ -96,8 +105,11 @@
         let initializeTypes = () => {
             type_options.forEach((val) => {
                 document.querySelector("#types").innerHTML +=`
-                <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" >
-                <label for=${val}>${val}</label><br>`;
+                <div id="${val}-div" style="border: 3px solid ${getColor(val)}; margin: 5px; padding-left: 5px; border-radius: 10px; background-color: ${getColor(val)}; color: white;">
+                    <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" >
+                    <label for=${val}>${val}</label><br>
+                </div>
+                `;
             })
         }
 
@@ -107,6 +119,7 @@
                                   .style("width", `${full_width}px`)
                                   .style("height", `${full_height}px`)
                                   .style("outline", '3px solid black')
+                                  .style("background-color", "#EEEEEE")
                                   .attr("class", "graph")
                                   .attr("id", "scatter_svg")
                                   .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -140,12 +153,12 @@
 
             let generateScales = () => {
                 let xScale = d3.scaleLinear()
-                .domain([lowest_stat_points, highest_stat_points])
-                .range([lowest_scale_factor, highest_x_scale_factor]);
+                    .domain(d3.extent(Object.keys(dict), key => dict[key][x_axis]))
+                    .range([lowest_scale_factor, highest_x_scale_factor]);
 
                 let yScale = d3.scaleLinear()
-                .domain([lowest_stat_points, highest_stat_points])
-                .range([highest_y_scale_factor, lowest_scale_factor]);
+                    .domain(d3.extent(Object.keys(dict), key => dict[key][y_axis]))
+                    .range([highest_y_scale_factor, lowest_scale_factor]);
 
                 return [xScale, yScale]
             }
@@ -205,25 +218,25 @@
                            .attr("id", "title")
                            .attr("text-anchor", "middle")
                            .attr("x", (width - margin.left - margin.right) / 2)
-                           .attr("y", -margin.top/3)
+                           .attr("y", -margin.top/3 - 5)
                            .attr("font-size", 40)
                            .text(`${x_axis} vs ${y_axis}`)
 
                 let scatter_title = scatter_svg.selectAll("#title")
 
-                scatter_title.enter()
-                             .append("text")
-                             .attr("text-anchor", "middle")
-                             .attr("x", (width - margin.left - margin.right) / 2)
-                             .attr("y", -margin.top/3)
-                             .attr("font-size", 40)
-                             .text(`${x_axis} vs ${y_axis}`)
+                // scatter_title.enter()
+                //              .append("text")
+                //              .attr("text-anchor", "middle")
+                //              .attr("x", (width - margin.left - margin.right) / 2)
+                //              .attr("y", -margin.top/3)
+                //              .attr("font-size", 30)
+                //              .text(`${x_axis} vs ${y_axis}`)
 
                 scatter_title.transition()
                              .duration(500)
                              .attr("text-anchor", "middle")
                              .attr("x", (width - margin.left - margin.right) / 2)
-                             .attr("y", -margin.top/3)
+                             .attr("y", -margin.top/3 - 5)
                              .attr("font-size", 40)
                              .text(`${x_axis} vs ${y_axis}`)
             }
@@ -247,8 +260,8 @@
                          })
                          .on('mouseover', function(d, i) {
                              scatter_svg.append("text")
-                                        .attr("x", d.pageX - 200)
-                                        .attr("y", d.pageY - 180)
+                                        .attr("x", (width - margin.left - margin.right) / 2)
+                                        .attr("y", -margin.top/3 + 20)
                                         .attr("text-anchor", "middle")
                                         .attr("font-size", 20)
                                         .attr("class", "label")
@@ -289,6 +302,7 @@
                                    .style("width", `${full_width}px`)
                                    .style("height", `${full_height}px`)
                                    .style("outline", '3px solid black')
+                                   .style("background-color", "#EEEEEE")
                                    .attr("class", "graph")
                                    .attr("id", "parallel_svg")
                                    .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -303,7 +317,7 @@
                 Object.keys(selected_pokemon).forEach((pokemon) => {
 
                 document.querySelector("#currTeam").innerHTML += `
-                    <p onclick="deletePokemon(event)" style="cursor: pointer;">${pokemon}</p>`
+                    <p onclick="deletePokemon(event)" style="cursor: pointer; border: 3px solid ${getColor(dict[pokemon].types[0])}; margin: 5px; padding-left: 5px; border-radius: 10px; background-color: ${getColor(dict[pokemon].types[0])}; color: white;">${pokemon}</p>`
                 })
 
                 // use the same curr_types list to reference selected types
@@ -402,8 +416,8 @@
                          })
                          .on('mouseover', function(d, i) {
                              parallel_svg.append("text")
-                                 .attr("x", d.pageX - 200)
-                                 .attr("y", d.pageY - 925)
+                                .attr("x", (width - margin.left - margin.right) / 2)
+                                .attr("y", -margin.top/3 + 10)
                                  .attr("text-anchor", "middle")
                                  .attr("font-size", 20)
                                  .attr("class", "label2")

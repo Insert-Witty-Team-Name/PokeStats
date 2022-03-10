@@ -1,11 +1,24 @@
 body {
     margin: 0;
     display: flex;
+    flex-direction: column;
     /* width: 100vw; */
-    padding: 1rem;
+    margin: 1rem;
     width: fit-content;
     justify-content: center;
     align-items: flex-start;
+    background-color: #DDDDDD;
+}
+#logo {
+    display: flex;
+    width: calc(100vw - 2rem);
+    justify-content: center;
+}
+#content {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
 }
 #graphs{
     display: flex;
@@ -19,6 +32,29 @@ body {
 }
 strong {
     display: flex;
-    width: 130px;
+    width: 15ch;
     justify-content: space-between;
+    font-size: 1.25rem;
+    align-items: center;
+}
+.graph {
+    margin-bottom: 20px;
+}
+img{
+    padding: 2rem;
+}
+
+.section-title{
+    width: 10ch;
+    justify-content: space-between;
+    font-size: 2rem;
+    padding-bottom: 1rem;
+    font-weight: bold;
+}
+.current-team{
+    align-self: center;
+    margin-left: 2rem
+}
+select{
+    background-color: #EEEEEE;
 }
