@@ -13,6 +13,7 @@ body {
     display: flex;
     width: calc(100vw - 2rem);
     justify-content: center;
+    position: relative;
 }
 #content {
     display: flex;
@@ -57,4 +58,59 @@ img{
 }
 select{
     background-color: #EEEEEE;
+}
+button {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    margin: 20px;
+    border: 3px solid #2a75bb;
+    background-color: #2a75bb;
+    color: white;
+    border-radius: 10px;
+    padding: 5px 20px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #3c5aa6;
+    border-color: #3c5aa6;
+}
+#modal {
+    display: none;
+    position: fixed;
+    z-index: 2;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}
+#modal-content {
+    background-color: #DDDDDD;
+    margin: 15% auto; 
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    width: 70%;
+    /* height: 70%; */
+    max-height: 70%;
+    overflow: scroll;
+}
+#close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: fixed;
+    right: 17%;
+}
+#close:hover, #close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+h2, #modal-content > p {
+    margin: 10px 0px;
+    padding-right: 30px;
 }

@@ -9,9 +9,39 @@
         <title>PokéStats</title>
     </head>
     <body>
-        <!-- <h1>PokéStats</h1> -->
-        <div id="logo">
-            <img src="logo.png">
+        <div id="header">
+            <div id="logo">
+                <img src="logo.png">
+            </div>
+            <button type="button" onclick="openModal()">FAQ</button>
+        </div>
+        <div id="modal">
+            <div id="modal-content">
+                <span id="close" onclick="closeModal()">&times;</span>
+                <h2>What is PokéStats?</h2>
+                <p>PokéStats is a visualization tool which can be used by Pokémon fans to help them optimize their teams!</p>
+                <h2>How does PokéStats work?</h2>
+                <p>To use Pokéstats, first you select the two stats which you would like to compare using the dropdown menu on the right. Then, using the checkboxes, select the Pokémon types which you would like to see displayed on the first graph. You will then see on the first graph a dot for each Pokémon of the selected types, plotted based on the two stats you chose.</p>
+                <p>From there, you can hover over any one of the dots and see the name of that Pokémon listed at the top of the graph. You can then click on any one of the dots to add that Pokémon to your "team", listed on the right. All the Pokémon on your team will have their stats displayed on the second graph on the bottom. By hovering over any one of the stat lines on the second graph, the name of that Pokémon will be displayed at the top of the graph.</p>
+                <h2>How many Pokémon can I have on my team?</h2>
+                <p>As anyone familiar with the Pokémon games knows, a trainer may only have up to six Pokémon on their team at a time! If you would like to remove a Pokémon from your team, simply click on their name in the 'Current Team' list, or click on their stat line in the second graph.</p>
+                <h2>What are the different stats I can compare?</h2>
+                <p>Using PokéStats, you can compare the following stats: Attack, Defense, Special Attack, Special Defense, HP, and Speed.</p> 
+                <p>Attack and Special Attack determine how much damage a Pokémon's moves will do (with the Attack corresponding to the damage of 'Physical' moves and Special Attack corresponding to the damage of 'Special' moves). Similarly, Defense and Special Defense determine the amount of damage this Pokémon will take from 'Physical' and 'Special' attacks, respectively.</p>
+                <p>Speed determines when this Pokémon gets to use its moves in a battle, with faster Pokémon attacking first. HP is the Pokémon's health, and determines how much damage they can take before they faint.</p>
+                <h2>How can I use PokéStats to help build a team?</h2>
+                <p>When building a Pokémon team, there are many things to keep in mind. Most people know that they should consider the distribution of types on their team, but many people do not take into account the distribution of stats. Using PokéStats, a player can strategically build a team whose stats are optimized for their battle strategy.</p>
+                <p>For example, some players may choose to have a 'tank' Pokémon on their team, with very high Defense, Special Defense, and HP stats, in order to take the brunt of the damage from a hard-hitting opponent.</p>
+                <p>It's also important to have some Pokémon on your team specialize in 'Physical' attacks, and others specialize in 'Special' attacks. Pokémon specializing in 'Physical' attacks need to have a high Attack stat, whereas the Special Attack stat doesn't matter as much, and vice versa for Pokémon specializing in 'Special' attacks.</p>
+                <p>It can also be very helpful to have a Pokémon on your team with a very high Speed stat, so that you can be much more likely to get an attack out before your opponent does.</p>
+                <h2>Where can I go to learn even more about Pokémon?</h2>
+                <p>There are tons of great websites and resources that you can use to expand your Pokémon knowledge, however here is a brief list of some of our favorites!</p>
+                <ul>
+                    <li><a href="https://serebii.net" target="_blank">Serebii</a></li>
+                    <li><a href="https://bulbapedia.bulbagarden.net/" target="_blank">Bulbapedia</a></li>
+                    <li><a href="https://pokemon.com" target="_blank">Official Pokémon Website</a></li>
+                </ul>
+            </div>
         </div>
         <div id="content">
             <div id="graphs"></div>
@@ -34,6 +64,20 @@
     </body>
     <script src="scripts/d3.js"></script>
     <script>
+        let modal = document.querySelector("#modal")
+        let openModal = () => {
+            modal.style.display = 'block';
+            document.querySelector("body").style.overflow = 'hidden';
+        }
+        let closeModal = () => {
+            modal.style.display = 'none';
+            document.querySelector("body").style.overflow = '';
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
         // Data Containers
         const dict = {};
         const selected_pokemon = {};
@@ -101,16 +145,24 @@
                 update();
             });
         }
-
+        let clearAll = () => {
+            document.querySelectorAll(".type").forEach((elem) => {
+                elem.checked = false;
+            })
+            update();
+        }
         let initializeTypes = () => {
+            
             type_options.forEach((val) => {
                 document.querySelector("#types").innerHTML +=`
                 <div id="${val}-div" style="border: 3px solid ${getColor(val)}; margin: 5px; padding-left: 5px; border-radius: 10px; background-color: ${getColor(val)}; color: white;">
-                    <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" >
+                    <input type="checkbox" id=${val} name=${val} value=${val} class="type" onchange="update()" style="cursor: pointer;">
                     <label for=${val}>${val}</label><br>
                 </div>
                 `;
             })
+            document.querySelector("#types").innerHTML += `
+                <div id="clear" style="border: 3px solid transparent; margin: 5px; padding-left: 5px; border-radius: 10px; background-color: gray; color: white; cursor: pointer;" onMouseOver="this.style.backgroundColor = 'dimgray'" onMouseOut="this.style.backgroundColor = 'gray'" onclick="clearAll()">Clear Selected</div>`
         }
 
         let generateScatterDotPlot = () => {
@@ -317,7 +369,7 @@
                 Object.keys(selected_pokemon).forEach((pokemon) => {
 
                 document.querySelector("#currTeam").innerHTML += `
-                    <p onclick="deletePokemon(event)" style="cursor: pointer; border: 3px solid ${getColor(dict[pokemon].types[0])}; margin: 5px; padding-left: 5px; border-radius: 10px; background-color: ${getColor(dict[pokemon].types[0])}; color: white;">${pokemon}</p>`
+                    <p onclick="deletePokemon(event)" style="cursor: pointer; border: 3px solid ${getColor(dict[pokemon].types[0])}; margin: 5px; padding-left: 5px; border-radius: 10px; background-color: ${getColor(dict[pokemon].types[0])}; color: white;" onMouseOver="document.querySelectorAll('.line').forEach((elem) => {if (elem.id == '${pokemon}') elem.style.strokeWidth = 7})" onMouseOut="document.querySelectorAll('.line').forEach((elem) => {if (elem.id == '${pokemon}') elem.style.strokeWidth = 3})">${pokemon}</p>`
                 })
 
                 // use the same curr_types list to reference selected types
@@ -407,6 +459,7 @@
                          .attr("class", "line")
                          .style("fill", "none")
                          .style("stroke-width", 3)
+                         .attr("id", key => key)
                          .attr("cursor", "pointer")
                          .style("stroke", key => getColor(selected_pokemon[key].types[0]))
                          .on("click", function(d, i) {
