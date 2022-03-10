@@ -464,10 +464,12 @@
                          .style("stroke", key => getColor(selected_pokemon[key].types[0]))
                          .on("click", function(d, i) {
                              delete selected_pokemon[i]
+                             d.target.remove()
                              d3.select(".label2").remove()
                              drawParallelCoord();
                          })
                          .on('mouseover', function(d, i) {
+                             d.target.style.strokeWidth = 7;
                              parallel_svg.append("text")
                                 .attr("x", (width - margin.left - margin.right) / 2)
                                 .attr("y", -margin.top/3 + 10)
@@ -478,13 +480,14 @@
                              })
                          .on('mouseout', function(d, i) {
                              d3.select(".label2").remove()
+                             d.target.style.strokeWidth = 3;
                              })
 
-                all_paths.transition()
-                         .duration(500)
-                         .style("fill", "none")
-                         .style("stroke", key => getColor(selected_pokemon[key].types[0]))
-                         .attr("d",  path)
+                // all_paths.transition()
+                //          .duration(500)
+                //          .style("fill", "none")
+                //          .style("stroke", key => getColor(selected_pokemon[key].types[0]))
+                //          .attr("d",  path)
 
                 all_paths.exit().remove()
             }
@@ -569,6 +572,9 @@
 
         let deletePokemon = (event) => {
             delete selected_pokemon[event.target.innerHTML];
+            document.querySelectorAll('.line').forEach((elem) => {
+                if (elem.id == event.target.innerHTML) elem.remove()
+                })
             update();
         }
 
