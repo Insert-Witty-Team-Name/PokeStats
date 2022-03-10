@@ -32,8 +32,10 @@ body {
 }
 strong {
     display: flex;
-    width: 130px;
+    width: 15ch;
     justify-content: space-between;
+    font-size: 1.25rem;
+    align-items: center;
 }
 .graph {
     margin-bottom: 20px;
@@ -52,4 +54,7 @@ img{
 .current-team{
     align-self: center;
     margin-left: 2rem
+}
+select{
+    background-color: #EEEEEE;
 }
