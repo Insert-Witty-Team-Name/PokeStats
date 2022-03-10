@@ -17,14 +17,18 @@
             <div id="graphs"></div>
             <div class="selections">
                 <div>
+                    <div class="section-title">Select Stats:</div>
                     <strong>x: <select id="stat1" class="dropdown"></select></strong><br>
                     <strong>y: <select id="stat2" class="dropdown"></select></strong><br>
                 </div>
-                <form id="types"></form>
-                <div>
-                    <h1>Current Team</h1>
-                    <div id="currTeam"></div>
-                </div>
+                <div class="section-title">Select a Type:</div>
+                <form id="types">
+                </form>
+
+            </div>
+            <div class="current-team">
+                <h1>Current Team</h1>
+                <div id="currTeam"></div>
             </div>
         </div>
     </body>
@@ -115,6 +119,7 @@
                                   .style("width", `${full_width}px`)
                                   .style("height", `${full_height}px`)
                                   .style("outline", '3px solid black')
+                                  .style("background-color", "#EEEEEE")
                                   .attr("class", "graph")
                                   .attr("id", "scatter_svg")
                                   .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -297,6 +302,7 @@
                                    .style("width", `${full_width}px`)
                                    .style("height", `${full_height}px`)
                                    .style("outline", '3px solid black')
+                                   .style("background-color", "#EEEEEE")
                                    .attr("class", "graph")
                                    .attr("id", "parallel_svg")
                                    .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
