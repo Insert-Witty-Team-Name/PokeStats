@@ -453,7 +453,7 @@
         }
 
         let ready = async () => {
-            const data = await d3.csv("./pokedex.csv", function(d) {
+            const data = await d3.csv("./pokedex.csv", null, function(d) {
                 dict[d.name] = {
                     "HP": parseInt(d.hp),
                     "ATK": parseInt(d.attack),
